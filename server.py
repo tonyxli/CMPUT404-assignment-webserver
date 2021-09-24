@@ -40,7 +40,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 content = "text/css"
             try:
                 f = open("www" + file_name, "r")
-                print(file_name)
+                print("www" + file_name)
+                print(content)
                 self.request.sendall(bytearray("HTTP/1.1 200 OK\r\n", "utf-8"))
                 self.request.sendall(bytearray("Content-Type: " + content + "\r\n\n", "utf-8"))
                 self.request.sendall(bytearray(f.read(), "utf-8"))
@@ -64,6 +65,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
             return file_name + "index.html"
         elif file_name != "/" and (not file_name.endswith("/")):
             return self.request.sendall(bytearray("HTTP/1.1 301 Moved Permenantly\r\nLocation: http://127.0.0.1:8080" + file_name + "/\r\n", "utf-8"))
+        elif file_name.endswith("deep.css/"):
+            file_name.replace("index.html", "")
         else:
             return file_name[:-1]
         
