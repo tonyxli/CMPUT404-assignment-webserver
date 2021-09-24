@@ -29,7 +29,8 @@ import socketserver
 
 class MyWebServer(socketserver.BaseRequestHandler):
     
-    def handle(self):
+    # Receive requests and extract data, then sends the data to decode_data(), open and send back the files requested
+    def handle(self):  
         self.data = self.request.recv(1024).strip()
         print ("Got a request of: %s\n" % self.data)
         file_name = self.decode_data(self.data)
@@ -38,10 +39,10 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 content = "text/html"
             elif file_name.endswith("css"):
                 content = "text/css"
+            else: 
+                content = "application/octet-stream"
             try:
                 f = open("www" + file_name, "r")
-                print("www" + file_name)
-                print(content)
                 self.request.sendall(bytearray("HTTP/1.1 200 OK\r\n", "utf-8"))
                 self.request.sendall(bytearray("Content-Type: " + content + "\r\n\n", "utf-8"))
                 self.request.sendall(bytearray(f.read(), "utf-8"))
@@ -50,6 +51,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 self.request.sendall(bytearray("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\nError 404 Could not find the page you were looking for", "utf-8"))
 
 
+    # decode the requests and return the directories and file names
     def decode_data(self, data):
         data = data.decode()  #decoding data
         if data == "":
