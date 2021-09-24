@@ -32,7 +32,41 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def handle(self):
         self.data = self.request.recv(1024).strip()
         print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        file_name = self.decode_data(self.data)
+        if file_name != None:
+            if file_name.endswith("html"):
+                content = "text/html"
+            elif file_name.endswith("css"):
+                content = "text/css"
+            try:
+                f = open("www" + file_name, "r")
+                print(file_name)
+                self.request.sendall(bytearray("HTTP/1.1 200 OK\r\n", "utf-8"))
+                self.request.sendall(bytearray("Content-Type: " + content + "\r\n\n", "utf-8"))
+                self.request.sendall(bytearray(f.read(), "utf-8"))
+                f.close()
+            except:
+                self.request.sendall(bytearray("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\nError 404 Could not find the page you were looking for", "utf-8"))
+
+
+    def decode_data(self, data):
+        data = data.decode()  #decoding data
+        if data == "":
+            return None
+        data_list = data.split(" ")
+        #checking if method is allowed 
+        method = data_list[0]
+        if method != "GET":
+            return self.request.sendall(bytearray("HTTP/1.1 405 Method Not Allowed\r\n", "utf-8"))
+
+        file_name = data_list[1]
+        if file_name == "/" or file_name.endswith("deep/"):
+            return file_name + "index.html"
+        elif file_name != "/" and (not file_name.endswith("/")):
+            return self.request.sendall(bytearray("HTTP/1.1 301 Moved Permenantly\r\nLocation: http://127.0.0.1:8080" + file_name + "/\r\n", "utf-8"))
+        else:
+            return file_name[:-1]
+        
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
